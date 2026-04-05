@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pyTigerGraph
+openai
+python-dotenv
+python-multipart
+pandas
+numpy
+scikit-learn
+requests
