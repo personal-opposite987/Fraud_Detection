@@ -186,9 +186,18 @@ def get_graph_snapshot(limit: int = 400) -> dict[str, Any]:
 def ingest_dataframe(df: Any) -> bool:
     try:
         import pandas as pd
+        import requests
         if df is None or len(df) == 0:
             return False
             
+        # Purge the old graph so each dataset gets a fresh visualization
+        try:
+            requests.delete(f"{RESTPP}/graph/{TG_GRAPH}/vertices/Supplier", headers=HEADERS, timeout=10)
+            requests.delete(f"{RESTPP}/graph/{TG_GRAPH}/vertices/Customer", headers=HEADERS, timeout=10)
+            print("Successfully purged old TigerGraph data for fresh upload.")
+        except Exception as e:
+            print(f"Purge failed (ignoring): {e}")
+
         vertices = {"Supplier": {}, "Customer": {}}
         edges = {"Supplier": {}}
         
