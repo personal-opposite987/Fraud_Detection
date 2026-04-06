@@ -66,18 +66,23 @@ def propagate_fraud_scores() -> bool:
     q = f"""
 USE GRAPH {TG_GRAPH}
 INTERPRET QUERY () {{
-    SumAccum<FLOAT> @added_risk;
+    MaxAccum<FLOAT> @new_risk;
+    
     Start = SELECT s FROM Supplier:s WHERE s.risk_score >= 0.7;
     C = SELECT tgt FROM Start:s -(Transaction:e)-> Customer:tgt
-        ACCUM tgt.@added_risk += (0.15 * s.risk_score);
+        ACCUM tgt.@new_risk += (0.8 * s.risk_score);
+        
     C2 = SELECT c FROM C:c
-         POST-ACCUM c.risk_score = c.risk_score + c.@added_risk;
+         WHERE c.@new_risk > c.risk_score
+         POST-ACCUM c.risk_score = c.@new_risk;
+
     StartC = SELECT c FROM Customer:c WHERE c.risk_score >= 0.7;
     S2 = SELECT tgt FROM StartC:c -(Transaction:e)-> Supplier:tgt
-         WHERE tgt.risk_score < 0.7
-         ACCUM tgt.@added_risk += 0.1;
+         ACCUM tgt.@new_risk += (0.8 * c.risk_score);
+         
     S3 = SELECT s FROM S2:s
-         POST-ACCUM s.risk_score = s.risk_score + s.@added_risk;
+         WHERE s.@new_risk > s.risk_score
+         POST-ACCUM s.risk_score = s.@new_risk;
 }}
 """
     try:
