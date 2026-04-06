@@ -15,49 +15,63 @@ export function ExploreGraph() {
   }, []);
 
   useEffect(() => {
-    if (containerRef.current) {
-      setDims({
-        width: containerRef.current.clientWidth,
-        height: containerRef.current.clientHeight
-      });
-    }
-    const handleResize = () => {
+    const update = () => {
       if (containerRef.current) {
         setDims({
           width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight
+          height: containerRef.current.clientHeight,
         });
       }
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [containerRef.current]);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
   const graphData = useMemo(() => {
     if (!data?.nodes?.length) return { nodes: [], links: [] };
     return {
-      nodes: data.nodes.map(n => ({ 
-        id: String(n.id), 
-        name: n.name || String(n.id), 
+      nodes: data.nodes.map((n) => ({
+        id: String(n.id),
+        name: n.name || String(n.id),
         val: 1,
-        fraud: n.fraud || (n.risk_score != null && n.risk_score >= 0.7)
+        // Bug fix: trust the backend fraud flag only.
+        // Previously we also re-derived fraud from risk_score >= 0.7 on the
+        // frontend, which caused ALL nodes to appear red when the backend was
+        // returning mock data or when scoring used min-max scaling (which
+        // inflates every node's score relative to the dataset maximum).
+        fraud: n.fraud === true,
       })),
-      links: data.edges?.map(e => ({ source: String(e.source), target: String(e.target) })) || []
+      links:
+        data.edges?.map((e) => ({
+          source: String(e.source),
+          target: String(e.target),
+        })) || [],
     };
   }, [data]);
 
   return (
-    <div className="page" style={{ height: "calc(100vh - 40px)", display: "flex", flexDirection: "column" }}>
+    <div
+      className="page"
+      style={{ height: "calc(100vh - 40px)", display: "flex", flexDirection: "column" }}
+    >
       <h1>Explore Network</h1>
       <p className="muted">
-        Live AI-Agent monitoring visualization. Flagged and propagated nodes glow <span style={{ color: "var(--danger)" }}>red</span>.
+        Live AI-Agent monitoring visualization. Flagged and propagated nodes glow{" "}
+        <span style={{ color: "var(--danger)" }}>red</span>.
       </p>
       {err && <p className="err">{err}</p>}
-      
-      <div 
+      <div
         ref={containerRef}
-        className="card" 
-        style={{ flex: 1, marginTop: "1rem", padding: 0, overflow: "hidden", position: "relative" }}>
+        className="card"
+        style={{
+          flex: 1,
+          marginTop: "1rem",
+          padding: 0,
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
         {graphData.nodes.length > 0 && (
           <ForceGraph2D
             width={dims.width}
@@ -69,29 +83,27 @@ export function ExploreGraph() {
             linkWidth={1.5}
             backgroundColor="transparent"
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-              const label = node.name;
-              const fontSize = 12/globalScale;
+              const fontSize = 12 / globalScale;
               ctx.font = `${fontSize}px Inter, Sans-Serif`;
 
               ctx.beginPath();
               ctx.arc(node.x, node.y, 6, 0, 2 * Math.PI, false);
               ctx.fillStyle = node.fraud ? "#ef4444" : "#3b82f6";
-              
+
               if (node.fraud) {
                 ctx.shadowColor = "#ef4444";
                 ctx.shadowBlur = 15;
               } else {
                 ctx.shadowBlur = 0;
               }
-              
+
               ctx.fill();
               ctx.shadowBlur = 0;
-              
-              // const isSupplier = label.startsWith("S");
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillStyle = node.fraud ? '#fca5a5' : '#cbd5e1';
-              ctx.fillText(label.slice(0, 10), node.x, node.y + 12);
+
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillStyle = node.fraud ? "#fca5a5" : "#cbd5e1";
+              ctx.fillText(node.name.slice(0, 10), node.x, node.y + 12);
             }}
           />
         )}

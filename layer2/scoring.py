@@ -47,12 +47,16 @@ def _numeric_feature_columns(df: pd.DataFrame) -> list[str]:
     return out
 
 
-def _minmax_01(x: np.ndarray) -> np.ndarray:
-    x = np.asarray(x, dtype=float)
-    lo, hi = np.nanmin(x), np.nanmax(x)
-    if hi - lo < 1e-12:
-        return np.zeros_like(x)
-    return (x - lo) / (hi - lo)
+def _risk_from_raw(raw: np.ndarray) -> np.ndarray:
+    """
+    Sigmoid centred at IF's decision boundary (raw == 0).
+    A row needs raw > 0 to score above 0.5 — clean datasets
+    cluster around 0.3-0.45, well below the 0.7 fraud threshold.
+    min-max was wrong: it always fills [0,1] so top 30% of ANY
+    dataset got flagged regardless of actual anomaly magnitude.
+    """
+    raw = np.asarray(raw, dtype=float)
+    return (1.0 / (1.0 + np.exp(-5.0 * raw))).astype(float)
 
 
 def score_dataframe(
@@ -100,7 +104,7 @@ def score_dataframe(
     )
     iso.fit(Xs)
     raw = -iso.decision_function(Xs)
-    risk = _minmax_01(raw)
+    risk = _risk_from_raw(raw)
     out["anomaly_raw"] = raw.astype(float)
     out["risk_score"] = risk.astype(float)
     out["fraud_flag"] = out["risk_score"] >= fraud_threshold

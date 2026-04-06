@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { fetchSummary, type Summary } from "../api/client";
+import { useUpload } from "../context/UploadContext";
 
 export function Home() {
+  const { uploadVersion } = useUpload();
   const [s, setS] = useState<Summary | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
+  // Re-fetches every time a new upload completes (uploadVersion increments)
   useEffect(() => {
+    setS(null); // reset to "—" while fetching
     fetchSummary()
       .then(setS)
       .catch((e: Error) => setErr(e.message));
-  }, []);
+  }, [uploadVersion]);
 
   return (
     <div className="page">

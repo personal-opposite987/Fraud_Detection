@@ -1,23 +1,26 @@
 import { useState } from "react";
 import { uploadScore } from "../api/client";
+import { useUpload } from "../context/UploadContext";
 
 export function Upload() {
+  const { lastResult, setLastResult, clearResult } = useUpload();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [preview, setPreview] = useState<Record<string, unknown>[] | null>(null);
+
+  const preview = lastResult?.preview ?? null;
 
   async function onFile(f: File | null) {
     if (!f) return;
     setBusy(true);
     setErr(null);
     setMsg(null);
-    setPreview(null);
+    clearResult(); // reset before new upload so Home shows "—" briefly
     try {
       const r = await uploadScore(f);
-      setPreview(r.preview);
+      setLastResult(r);
       setMsg(
-        `Scored ${r.row_count} rows. Fraud rate in sample: ${r.stats.fraud_rate_pct}% — metrics updated for Home / Stats / Optimize.`,
+        `Scored ${r.row_count} rows. Fraud rate: ${r.stats.fraud_rate_pct}% — metrics updated for Home / Stats / Optimize.`,
       );
     } catch (e) {
       setErr((e as Error).message);
