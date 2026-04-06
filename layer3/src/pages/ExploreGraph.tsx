@@ -87,7 +87,7 @@ export function ExploreGraph() {
               ctx.fill();
               ctx.shadowBlur = 0;
               
-              const isSupplier = label.startsWith("S");
+              // const isSupplier = label.startsWith("S");
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillStyle = node.fraud ? '#fca5a5' : '#cbd5e1';
