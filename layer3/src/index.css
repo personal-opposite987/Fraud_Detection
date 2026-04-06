@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  font-family: "Inter", system-ui, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #f1f5f9;
+  background: #030712;
+  --accent: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.5);
+  --danger: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.4);
+  --ok: #10b981;
+  --card-bg: rgba(15, 23, 42, 0.7);
+  --border: rgba(51, 65, 85, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at 10% 0%, #0c2044 0%, #030712 40%),
+              radial-gradient(circle at 90% 100%, #170d24 0%, #030712 50%);
+  background-attachment: fixed;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-shadow: 0 0 8px var(--accent-glow);
+}
+
+h1, h2, h3 {
+  font-family: "Outfit", sans-serif;
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+  background: linear-gradient(to right, #ffffff, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 2.25rem;
+}
+
+.page {
+  padding: 2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.3), 0 inset 1px 0 rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5), 0 0 20px -2px var(--accent-glow);
+}
+
+.card .label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.card .value {
+  font-family: "Outfit", sans-serif;
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(255,255,255,0.1);
+}
+
+.muted {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.chart-wrap {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  height: 380px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: "Inter", sans-serif;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  background: #334155;
+  color: #64748b;
+  box-shadow: none;
+  cursor: not-allowed;
+  border-color: transparent;
+}
+
+.err {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  display: inline-block;
+}
