@@ -15,7 +15,7 @@ from scoring import (
     summarize_enriched,
     time_series_loss,
 )
-from tigergraph import get_flagged_nodes, get_graph_snapshot, get_schema, run_query, propagate_fraud_scores
+from tigergraph import get_flagged_nodes, get_graph_snapshot, get_schema, run_query, propagate_fraud_scores, ingest_dataframe
 
 app = FastAPI(title="Layer 2 — Fraud API")
 
@@ -164,6 +164,11 @@ async def score_dataset(
     date_col = meta.get("date_column")
     stats = summarize_enriched(enriched, amount_col=amount_col)
     series = time_series_loss(enriched, date_col=date_col, amount_col=amount_col)
+
+    # Ingest directly to TigerGraph via REST API
+    import asyncio
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(None, ingest_dataframe, enriched)
 
     LAST_METRICS = stats
     LAST_TIME_SERIES = series

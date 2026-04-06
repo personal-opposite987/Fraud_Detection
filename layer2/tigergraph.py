@@ -182,3 +182,63 @@ def get_graph_snapshot(limit: int = 400) -> dict[str, Any]:
         print(f"get_graph_snapshot failed: {e}")
 
     return _mock_graph()
+
+def ingest_dataframe(df: Any) -> bool:
+    try:
+        import pandas as pd
+        if df is None or len(df) == 0:
+            return False
+            
+        vertices = {"Supplier": {}, "Customer": {}}
+        edges = {"Supplier": {}}
+        
+        cols = set(df.columns)
+        sup_col = "supplier_id" if "supplier_id" in cols else ("source" if "source" in cols else None)
+        cust_col = "customer_id" if "customer_id" in cols else ("target" if "target" in cols else None)
+        amt_col = "amount" if "amount" in cols else None
+        
+        if not sup_col or not cust_col:
+            print("Missing supplier or customer columns for TigerGraph ingestion")
+            return False
+            
+        for _, row in df.iterrows():
+            s_id = str(row[sup_col])
+            c_id = str(row[cust_col])
+            rs = float(row.get("risk_score", 0.0))
+            amt = float(row.get(amt_col, 0.0)) if amt_col else 0.0
+            
+            if s_id not in vertices["Supplier"]:
+                vertices["Supplier"][s_id] = {"name": {"value": s_id}, "risk_score": {"value": rs}}
+            else:
+                vertices["Supplier"][s_id]["risk_score"]["value"] = max(vertices["Supplier"][s_id]["risk_score"]["value"], rs)
+                
+            if c_id not in vertices["Customer"]:
+                vertices["Customer"][c_id] = {"name": {"value": c_id}, "risk_score": {"value": 0.0}}
+                
+            if s_id not in edges["Supplier"]:
+                edges["Supplier"][s_id] = {"Transaction": {"Customer": {}}}
+                
+            if c_id not in edges["Supplier"][s_id]["Transaction"]["Customer"]:
+                edges["Supplier"][s_id]["Transaction"]["Customer"][c_id] = {
+                    "amount": {"value": amt},
+                    "quantity_shipped": {"value": amt},
+                    "risk_score": {"value": rs},
+                    "fraud_prob": {"value": rs}
+                }
+            else:
+                edges["Supplier"][s_id]["Transaction"]["Customer"][c_id]["amount"]["value"] += amt
+                edges["Supplier"][s_id]["Transaction"]["Customer"][c_id]["quantity_shipped"]["value"] += amt
+                edges["Supplier"][s_id]["Transaction"]["Customer"][c_id]["risk_score"]["value"] = max(
+                    edges["Supplier"][s_id]["Transaction"]["Customer"][c_id]["risk_score"]["value"], rs
+                )
+                edges["Supplier"][s_id]["Transaction"]["Customer"][c_id]["fraud_prob"]["value"] = max(
+                    edges["Supplier"][s_id]["Transaction"]["Customer"][c_id]["fraud_prob"]["value"], rs
+                )
+                
+        payload = {"vertices": vertices, "edges": edges}
+        _post(f"/graph/{TG_GRAPH}", body=payload)
+        print(f"Successfully ingested {len(df)} rows into TigerGraph.")
+        return True
+    except Exception as e:
+        print(f"TigerGraph ingestion failed: {e}")
+        return False
